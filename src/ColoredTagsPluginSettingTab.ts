@@ -614,162 +614,95 @@ export class ColoredTagsPluginSettingTab extends PluginSettingTab {
 		const wrapper = tagPaletteSetting.controlEl.createDiv({
 			cls: "tag-color-setting",
 		});
-		const controlsRow = wrapper.createDiv({
-			cls: "tag-color-setting__row",
-		});
-		const inputContainer = controlsRow.createDiv({
+		const inputContainer = wrapper.createDiv({
 			cls: "tag-color-setting__input",
 		});
 
-		const datalistId = `tag-color-list-${Date.now()}`;
-		const datalist = inputContainer.createEl("datalist", {
-			attr: { id: datalistId },
-		});
-		const refreshTagOptions = () => this.populateTagOptions(datalist);
-		refreshTagOptions();
-
-		let currentTag = "";
-		const tagInput = new TextComponent(inputContainer);
-		tagInput
+		let filter = "";
+		const filterInput = new TextComponent(inputContainer);
+		filterInput
 			.setPlaceholder(
-				I18n.t("settings.experimental.tagColors.placeholder"),
+				I18n.t("settings.experimental.tagColors.filterPlaceholder"),
 			)
 			.setValue("");
-		tagInput.inputEl.setAttr("list", datalistId);
-		tagInput.onChange((value) => {
-			currentTag = normalizeTagName(value);
-			updateSelectedSwatch();
+		filterInput.onChange((value) => {
+			filter = normalizeTagName(value);
+			this.applyTagFilter(listContainer, filter);
 		});
 
-		const paletteEl = controlsRow.createDiv({
-			cls: "tag-color-setting__palette",
-		});
 		const listContainer = wrapper.createDiv({
-			cls: "tag-color-setting__chips",
+			cls: "tag-color-setting__list",
 		});
 
-		const handleAssignmentsChange = () => {
-			updateSelectionState();
-			refreshTagOptions();
+		const renderList = () => {
+			this.renderTagColorRows(listContainer, renderList);
+			this.applyTagFilter(listContainer, filter);
 		};
 
-		const updateSelectedSwatch = () => {
-			const palette = this.getActivePalette();
-			const assignedIndex =
-				(this.plugin.settings.tagColors &&
-					this.plugin.settings.tagColors[currentTag]) ??
-				null;
-			Array.from(paletteEl.children).forEach((child, index) => {
-				child.classList.toggle(
-					SELECTED_CLASS,
-					assignedIndex !== null &&
-						assignedIndex !== undefined &&
-						normalizePaletteIndex(assignedIndex, palette.length) ===
-							index,
-				);
-				(child as HTMLButtonElement).disabled = !currentTag;
-			});
-		};
-
-		const updateSelectionState = () => {
-			updateSelectedSwatch();
-		};
-
-		const applySelection = async (index: number) => {
-			if (!currentTag) {
-				return;
-			}
-			this.plugin.settings.tagColors[currentTag] = index;
-			await this.plugin.saveSettings();
-			this.plugin.colorizeTag(currentTag);
-			this.renderTagColorAssignments(
-				listContainer,
-				handleAssignmentsChange,
-			);
-		};
-
-		this.renderPaletteSwatches(paletteEl, applySelection);
-		this.renderTagColorAssignments(listContainer, handleAssignmentsChange);
-
-		this.subscribeToPaletteChange(() => {
-			this.renderPaletteSwatches(paletteEl, applySelection);
-			this.renderTagColorAssignments(
-				listContainer,
-				handleAssignmentsChange,
-			);
-			updateSelectionState();
-		});
-
-		updateSelectionState();
+		renderList();
+		this.subscribeToPaletteChange(renderList);
 	}
 
-	private renderPaletteSwatches(
-		paletteEl: HTMLElement,
-		onSelect: (index: number) => Promise<void>,
-	) {
-		paletteEl.empty();
-		const palette = this.getActivePalette();
-
-		palette.forEach((color, index) => {
-			const swatch = paletteEl.createEl("button", {
-				cls: "tag-color-setting__swatch",
-				attr: {
-					type: "button",
-					style: `background-color: ${color}`,
-					"aria-label": `${I18n.t(
-						"settings.experimental.tagColors.applyHint",
-					)} ${index + 1}`,
-				},
-			});
-			swatch.addEventListener("click", () => {
-				void onSelect(index);
-			});
-		});
-	}
-
-	private renderTagColorAssignments(
+	/**
+	 * Lists every tag in use in the vault, plus any tag that still has a color
+	 * assigned, each with its own row of palette swatches.
+	 */
+	private renderTagColorRows(
 		listEl: HTMLElement,
-		onChange?: () => void,
+		onChange: () => void,
 	): void {
 		listEl.empty();
-		const entries = Object.entries(this.plugin.settings.tagColors || {});
+		const tags = this.collectTagsForAssignment();
 
-		if (!entries.length) {
+		if (!tags.length) {
 			listEl.createDiv({
 				cls: "tag-color-setting__empty",
 				text: I18n.t("settings.experimental.tagColors.empty"),
 			});
-			onChange?.();
 			return;
 		}
 
-		entries
-			.sort(([tagA], [tagB]) => tagA.localeCompare(tagB))
-			.forEach(([tag]) => {
-				const chipWrapper = listEl.createDiv({
-					cls: "tag-color-setting__chip",
-				});
-				const chip = chipWrapper.createEl("a", {
-					cls: "tag",
-					text: `#${tag}`,
+		const palette = this.getActivePalette();
+		const tagColors = this.plugin.settings.tagColors || {};
+
+		tags.forEach((tag) => {
+			const row = listEl.createDiv({ cls: "tag-color-setting__tag-row" });
+			row.dataset.tag = tag;
+
+			row.createEl("a", {
+				cls: "tag",
+				text: `#${tag}`,
+				attr: { href: `#${tag}` },
+			}).addEventListener("click", (event) => event.preventDefault());
+
+			const assignedIndex = tagColors[tag];
+			const selectedIndex =
+				assignedIndex === undefined
+					? null
+					: normalizePaletteIndex(assignedIndex, palette.length);
+
+			const swatches = row.createDiv({
+				cls: "tag-color-setting__palette",
+			});
+			palette.forEach((color, index) => {
+				const swatch = swatches.createEl("button", {
+					cls: "tag-color-setting__swatch",
 					attr: {
-						href: `#${tag}`,
+						type: "button",
+						style: `background-color: ${color}`,
+						"aria-label": `${I18n.t(
+							"settings.experimental.tagColors.applyHint",
+						)} ${index + 1}`,
 					},
 				});
-				chip.addEventListener("click", (event) => {
-					event.preventDefault();
-					const tagInputEl = listEl
-						.closest(".tag-color-setting")
-						?.querySelector<HTMLInputElement>(
-							".tag-color-setting__input input",
-						);
-					if (tagInputEl) {
-						tagInputEl.value = `#${tag}`;
-						tagInputEl.dispatchEvent(new Event("input"));
-					}
+				swatch.classList.toggle(SELECTED_CLASS, selectedIndex === index);
+				swatch.addEventListener("click", () => {
+					void this.assignTagColor(tag, index, onChange);
 				});
+			});
 
-				const removeButton = chipWrapper.createEl("button", {
+			if (selectedIndex !== null) {
+				const resetButton = row.createEl("button", {
 					cls: "tag-color-setting__chip-remove",
 					attr: {
 						type: "button",
@@ -780,49 +713,54 @@ export class ColoredTagsPluginSettingTab extends PluginSettingTab {
 					},
 					text: "✕",
 				});
-				removeButton.addEventListener("click", (event) => {
-					event.preventDefault();
-					event.stopPropagation();
-					void this.removeTagColorAssignment(tag, listEl, onChange);
+				resetButton.addEventListener("click", () => {
+					void this.removeTagColorAssignment(tag, onChange);
 				});
-			});
+			}
+		});
+	}
 
-		onChange?.();
+	private applyTagFilter(listEl: HTMLElement, filter: string): void {
+		listEl
+			.querySelectorAll<HTMLElement>(".tag-color-setting__tag-row")
+			.forEach((row) => {
+				row.classList.toggle(
+					"tag-color-setting__tag-row--hidden",
+					!!filter && !String(row.dataset.tag).includes(filter),
+				);
+			});
+	}
+
+	private async assignTagColor(
+		tag: string,
+		index: number,
+		onChange: () => void,
+	): Promise<void> {
+		this.plugin.settings.tagColors[tag] = index;
+		await this.plugin.saveSettings();
+		this.plugin.colorizeTag(tag);
+		onChange();
 	}
 
 	private async removeTagColorAssignment(
 		tag: string,
-		listEl: HTMLElement,
-		onChange?: () => void,
+		onChange: () => void,
 	): Promise<void> {
 		delete this.plugin.settings.tagColors[tag];
 		await this.plugin.saveSettings();
-		this.renderTagColorAssignments(listEl, onChange);
+		onChange();
 	}
 
-	private populateTagOptions(datalist: HTMLElement): void {
-		datalist.empty();
-		const knownTags = new Set(
-			Object.keys(this.plugin.settings.knownTags || {}),
+	private collectTagsForAssignment(): string[] {
+		const tags = new Set(
+			Object.keys(this.app.metadataCache?.getTags?.() || {})
+				.map((tag) => normalizeTagName(tag))
+				.filter((tag) => tag.length > 0),
 		);
-		const assignedTags = new Set(
-			Object.keys(this.plugin.settings.tagColors || {}),
+		Object.keys(this.plugin.settings.tagColors || {}).forEach((tag) =>
+			tags.add(tag),
 		);
-		const metadataTags = Object.keys(
-			this.app.metadataCache?.getTags?.() || {},
-		)
-			.map((tag) => normalizeTagName(tag))
-			.filter((tag) => tag.length > 0);
-		metadataTags.forEach((tag) => knownTags.add(tag));
-
-		Array.from(knownTags)
-			.filter((tag) => !assignedTags.has(tag))
-			.sort((a, b) => a.localeCompare(b))
-			.forEach((tag) => {
-				datalist.createEl("option", {
-					attr: { value: `#${tag}` },
-				});
-			});
+		return Array.from(tags).sort((a, b) => a.localeCompare(b));
 	}
 
 	private getActivePalette(): string[] {
