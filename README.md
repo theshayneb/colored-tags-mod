@@ -1,4 +1,6 @@
-# Colored Tags Plugin for Obsidian
+# Colored Tags Mod for Obsidian
+
+A fork of [Colored Tags](https://github.com/pfrankov/obsidian-colored-tags) by Pavel Frankov. It applies settings synced from your other devices with Obsidian Sync right away. Its plugin ID is `colored-tags-mod`, so it installs alongside the original rather than replacing it.
 
 <img width="446" alt="Demo" src="https://github.com/pfrankov/obsidian-colored-tags/assets/584632/9ff98fb1-f397-449c-9a22-d5ba1e7bf3d9">
 
@@ -31,7 +33,9 @@ The plugin automatically detects language settings and displays the interface in
 Use **Tag assignments** (in Experimental settings) to pick a color from the current palette for a tag. Custom colors are not supported. If you change palettes, the tag gets the nearest color from the new palette.
 
 ## Syncing across devices
-All settings (palette, per-tag colors, accessibility options and tag order) are stored in the plugin's `data.json`, so Obsidian Sync carries them between devices. In **Settings → Sync**, turn on **Installed community plugins**. When Sync brings in changes from another device, the plugin applies them right away, with no restart needed.
+All settings (palette, per-tag colors, accessibility options and tag order) are stored in the plugin's `data.json`, so Obsidian Sync carries them between devices.
+
+Coming from the original Colored Tags? Copy `.obsidian/plugins/colored-tags/data.json` to `.obsidian/plugins/colored-tags-mod/data.json` to keep your settings, then turn off the original so tags aren't colored twice. In **Settings → Sync**, turn on **Installed community plugins**. When Sync brings in changes from another device, the plugin applies them right away, with no restart needed.
 
 ## Roadmap
 - [x] ~~Settings for palette size, base chroma, and base lightness.~~
@@ -48,11 +52,8 @@ All settings (palette, per-tag colors, accessibility options and tag order) are 
 
 ## Installation
 
-### Obsidian plugin store
-This plugin is available in the Obsidian community plugin store https://obsidian.md/plugins?id=colored-tags
-
 ### BRAT
-You can install this plugin via [BRAT](https://obsidian.md/plugins?id=obsidian42-brat): `pfrankov/obsidian-colored-tags`
+This fork isn't in the Obsidian community plugin store. Install it with [BRAT](https://obsidian.md/plugins?id=obsidian42-brat): `theshayneb/colored-tags-mod`
 
 ## My other Obsidian plugins
 - [Local GPT](https://github.com/pfrankov/obsidian-local-gpt) that assists with local AI for maximum privacy and offline access.
