@@ -41,6 +41,8 @@ export default class ColoredTagsPlugin extends Plugin {
 	private tagManager!: TagManager;
 	private saveKnownTagsPromise: Promise<void> | null = null;
 	private saveKnownTagsQueued = false;
+	private settingTab: ColoredTagsPluginSettingTab | null = null;
+	private isLayoutReady = false;
 
 	async onload() {
 		await this.loadSettings();
@@ -49,6 +51,7 @@ export default class ColoredTagsPlugin extends Plugin {
 		this.tagManager = new TagManager(this.settings.knownTags);
 
 		this.app.workspace.onLayoutReady(async () => {
+			this.isLayoutReady = true;
 			await this.saveKnownTags();
 			this.reload();
 
@@ -80,7 +83,8 @@ export default class ColoredTagsPlugin extends Plugin {
 				),
 			);
 
-			this.addSettingTab(new ColoredTagsPluginSettingTab(this.app, this));
+			this.settingTab = new ColoredTagsPluginSettingTab(this.app, this);
+			this.addSettingTab(this.settingTab);
 			this.registerEditorExtension(coloredClassApplierPlugin);
 		});
 	}
@@ -259,6 +263,34 @@ export default class ColoredTagsPlugin extends Plugin {
 					`.bases-metadata-value[data-property-type="tags" i] .multi-select-pill-remove-button.colored-tag-${tagLower}`,
 				]
 			: [];
+	}
+
+	/**
+	 * Called by Obsidian when data.json changes on disk outside the plugin,
+	 * e.g. when Obsidian Sync pulls settings from another device.
+	 */
+	async onExternalSettingsChange() {
+		const localKnownTags = this.tagManager?.exportKnownTags() ?? {};
+		await this.loadSettings();
+
+		// Remote tag orders win so colors match across devices; tags this
+		// device has seen but the remote has not are kept.
+		this.settings.knownTags = {
+			...localKnownTags,
+			...this.settings.knownTags,
+		};
+		this.tagManager = new TagManager(this.settings.knownTags);
+
+		if (!this.isLayoutReady) {
+			return;
+		}
+
+		await this.saveKnownTags();
+		this.reload();
+
+		if (this.settingTab?.containerEl.isConnected) {
+			this.settingTab.display();
+		}
 	}
 
 	async loadSettings() {
