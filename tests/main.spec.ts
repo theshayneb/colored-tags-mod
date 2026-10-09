@@ -257,3 +257,55 @@ describe("ColoredTagsPlugin startup", () => {
 		}
 	});
 });
+
+describe("ColoredTagsPlugin external settings changes", () => {
+	it("reloads synced settings and keeps remote tag orders", async () => {
+		const plugin = createPlugin();
+		(plugin as any).isLayoutReady = true;
+		plugin.app.metadataCache.getTags = () => ({
+			"#a": 1,
+			"#c": 1,
+			"#local": 1,
+		});
+		(plugin as any).tagManager.exportKnownTags = vi.fn(() => ({
+			a: 5,
+			local: 9,
+		}));
+		vi.spyOn(plugin, "loadData").mockResolvedValue({
+			...DEFAULT_SETTINGS,
+			mixColors: false,
+			tagColors: { synced: 2 },
+			knownTags: { a: 1, c: 2 },
+		});
+		const saveData = vi
+			.spyOn(plugin, "saveData")
+			.mockResolvedValue(undefined);
+		const reload = vi.spyOn(plugin, "reload").mockImplementation(() => {});
+
+		await plugin.onExternalSettingsChange();
+
+		// Nothing changed relative to the merged orders, so no write-back
+		// that would bounce the file through Sync again.
+		expect(saveData).not.toHaveBeenCalled();
+		expect(plugin.settings.mixColors).toBe(false);
+		expect(plugin.settings.tagColors).toEqual({ synced: 2 });
+		expect(
+			Object.fromEntries((plugin as any).tagManager.getTagsMap()),
+		).toEqual({ a: 1, c: 2, local: 9 });
+		expect(reload).toHaveBeenCalledOnce();
+	});
+
+	it("defers reloading until the layout is ready", async () => {
+		const plugin = createPlugin();
+		vi.spyOn(plugin, "loadData").mockResolvedValue({
+			...DEFAULT_SETTINGS,
+			transition: false,
+		});
+		const reload = vi.spyOn(plugin, "reload").mockImplementation(() => {});
+
+		await plugin.onExternalSettingsChange();
+
+		expect(plugin.settings.transition).toBe(false);
+		expect(reload).not.toHaveBeenCalled();
+	});
+});

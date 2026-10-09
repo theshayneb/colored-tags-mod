@@ -30,6 +30,9 @@ The plugin automatically detects language settings and displays the interface in
 ## Per-tag colors
 Use **Tag assignments** (in Experimental settings) to pick a color from the current palette for a tag. Custom colors are not supported. If you change palettes, the tag gets the nearest color from the new palette.
 
+## Syncing across devices
+All settings (palette, per-tag colors, accessibility options and tag order) are stored in the plugin's `data.json`, so Obsidian Sync carries them between devices. In **Settings → Sync**, turn on **Installed community plugins**. When Sync brings in changes from another device, the plugin applies them right away, with no restart needed.
+
 ## Roadmap
 - [x] ~~Settings for palette size, base chroma, and base lightness.~~
 - [x] ~~Optimization: store existing, already calculated colors of tags. Render only new ones.~~
