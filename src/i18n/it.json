@@ -46,8 +46,8 @@
 			},
 			"tagColors": {
 				"name": "Assegnazioni etichette",
-				"description": "Scegli un colore dalla palette attuale per qualsiasi etichetta del vault. Se cambi palette, ogni etichetta si adatta al colore più vicino.",
-				"filterPlaceholder": "Filtra etichette",
+				"description": "Fai clic su un'etichetta qui sotto, poi su un colore della palette per assegnarlo. Se cambi palette, ogni etichetta si adatta al colore più vicino.",
+				"placeholder": "Inizia a digitare un'etichetta",
 				"clear": "Reimposta colore",
 				"empty": "Ancora nessuna etichetta nel vault",
 				"applyHint": "Applica colore"

@@ -46,8 +46,8 @@
 			},
 			"tagColors": {
 				"name": "Atribuições de etiquetas",
-				"description": "Escolha uma cor da paleta atual para qualquer etiqueta do seu cofre. Se mudar a paleta, cada etiqueta adapta-se à cor mais próxima.",
-				"filterPlaceholder": "Filtrar etiquetas",
+				"description": "Clique numa etiqueta abaixo e depois numa cor da paleta para a atribuir. Se mudar a paleta, cada etiqueta adapta-se à cor mais próxima.",
+				"placeholder": "Comece a digitar uma etiqueta",
 				"clear": "Redefinir cor",
 				"empty": "Ainda não há etiquetas no seu cofre",
 				"applyHint": "Aplicar cor"
