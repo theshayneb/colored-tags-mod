@@ -46,8 +46,8 @@
 			},
 			"tagColors": {
 				"name": "Asignaciones de etiquetas",
-				"description": "Elige un color de la paleta actual para cualquier etiqueta de tu bóveda. Si cambias la paleta, cada etiqueta se adapta al color más cercano.",
-				"filterPlaceholder": "Filtrar etiquetas",
+				"description": "Haz clic en una etiqueta de abajo y luego en un color de la paleta para asignarlo. Si cambias la paleta, cada etiqueta se adapta al color más cercano.",
+				"placeholder": "Empieza a escribir una etiqueta",
 				"clear": "Restablecer color",
 				"empty": "Aún no hay etiquetas en tu bóveda",
 				"applyHint": "Aplicar color"

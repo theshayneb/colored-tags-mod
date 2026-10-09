@@ -1,7 +1,7 @@
 {
 	"id": "colored-tags-mod",
 	"name": "Colored Tags Mod",
-	"version": "7.0.3",
+	"version": "7.0.4",
 	"minAppVersion": "1.13.0",
 	"description": "A fork of Colored Tags that applies settings synced from other devices with Obsidian Sync. Colorizes tags in different colors, mixing nested tag colors with the root tag and matching text contrast to WCAG 2.1 AA.",
 	"author": "theshayneb (fork of Colored Tags by Pavel Frankov)",

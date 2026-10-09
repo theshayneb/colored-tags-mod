@@ -46,8 +46,8 @@
 			},
 			"tagColors": {
 				"name": "Tag assignments",
-				"description": "Pick a color from the current palette for any tag in your vault. If you change the palette, each tag adapts to the nearest color.",
-				"filterPlaceholder": "Filter tags",
+				"description": "Click a tag below, then click a color in the palette to assign it. If you change the palette, each tag adapts to the nearest color.",
+				"placeholder": "Start typing a tag",
 				"clear": "Reset color",
 				"empty": "No tags in your vault yet",
 				"applyHint": "Apply color"

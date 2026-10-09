@@ -46,8 +46,8 @@
 			},
 			"tagColors": {
 				"name": "Affectations d'étiquettes",
-				"description": "Choisissez une couleur de la palette actuelle pour n'importe quelle étiquette de votre coffre. Si vous changez de palette, chaque étiquette prend la couleur la plus proche.",
-				"filterPlaceholder": "Filtrer les étiquettes",
+				"description": "Cliquez sur une étiquette ci-dessous, puis sur une couleur de la palette pour l'attribuer. Si vous changez de palette, chaque étiquette prend la couleur la plus proche.",
+				"placeholder": "Commencez à taper une étiquette",
 				"clear": "Réinitialiser la couleur",
 				"empty": "Aucune étiquette dans votre coffre pour l'instant",
 				"applyHint": "Appliquer la couleur"
