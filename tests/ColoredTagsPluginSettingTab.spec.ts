@@ -402,67 +402,126 @@ describe("ColoredTagsPluginSettingTab", () => {
 			).toBeTruthy();
 		});
 
-		it("allows assigning palette color to a tag and lists overrides", async () => {
+		const tagRows = (tab: ColoredTagsPluginSettingTab) =>
+			Array.from(
+				tab.containerEl.querySelectorAll<HTMLElement>(
+					".tag-color-setting__tag-row",
+				),
+			);
+		const visibleTags = (tab: ColoredTagsPluginSettingTab) =>
+			tagRows(tab)
+				.filter(
+					(row) =>
+						!row.classList.contains(
+							"tag-color-setting__tag-row--hidden",
+						),
+				)
+				.map((row) => row.dataset.tag);
+		const rowFor = (tab: ColoredTagsPluginSettingTab, tag: string) =>
+			tagRows(tab).find((row) => row.dataset.tag === tag)!;
+
+		it("lists every tag in use with its own swatches", () => {
+			const { tab } = createTab();
+			tab.showExperimental = true;
+			renderSettingsTab(tab);
+
+			expect(visibleTags(tab)).toEqual(["a", "a/b", "c"]);
+			expect(
+				rowFor(tab, "a").querySelectorAll(".tag-color-setting__swatch")
+					.length,
+			).toBe(basePalettes.light.length);
+			expect(rowFor(tab, "a").querySelector("a.tag")?.textContent).toBe(
+				"#a",
+			);
+		});
+
+		it("assigns a palette color to a tag from its row", async () => {
 			const saveSettings = vi.fn(async () => {});
 			const { tab, plugin } = createTab({ saveSettings });
+			tab.showExperimental = true;
+			renderSettingsTab(tab);
+
+			const swatch = rowFor(tab, "c").querySelectorAll(
+				".tag-color-setting__swatch",
+			)[1] as HTMLButtonElement;
+			swatch.dispatchEvent(new Event("click"));
+			await tick();
+
+			expect(plugin.settings.tagColors["c"]).toBe(1);
+			expect(saveSettings).toHaveBeenCalled();
+			expect(plugin.colorizeTag).toHaveBeenCalledWith("c");
+			const swatches = rowFor(tab, "c").querySelectorAll(
+				".tag-color-setting__swatch",
+			);
+			expect(swatches[1].classList.contains("is-selected")).toBe(true);
+			expect(swatches[0].classList.contains("is-selected")).toBe(false);
+			expect(
+				rowFor(tab, "c").querySelector(".tag-color-setting__chip-remove"),
+			).toBeTruthy();
+		});
+
+		it("keeps tags that have a color but are no longer in use", () => {
+			const { tab } = createTab({ settings: { tagColors: { old: 0 } } });
+			tab.showExperimental = true;
+			renderSettingsTab(tab);
+
+			expect(visibleTags(tab)).toEqual(["a", "a/b", "c", "old"]);
+		});
+
+		it("filters the list as you type and keeps the filter after changes", async () => {
+			const { tab } = createTab();
 			tab.showExperimental = true;
 			renderSettingsTab(tab);
 
 			const input = tab.containerEl.querySelector(
 				".tag-color-setting__input input",
 			) as HTMLInputElement;
-			const swatch = tab.containerEl.querySelector(
-				".tag-color-setting__swatch",
-			) as HTMLButtonElement;
-			expect(swatch.disabled).toBe(true);
-
-			input.value = "#a";
+			input.value = "#A";
 			input.dispatchEvent(new Event("input"));
 
-			swatch.dispatchEvent(new Event("click"));
+			expect(visibleTags(tab)).toEqual(["a", "a/b"]);
+
+			(
+				rowFor(tab, "a").querySelector(
+					".tag-color-setting__swatch",
+				) as HTMLButtonElement
+			).dispatchEvent(new Event("click"));
 			await tick();
 
-			expect(plugin.settings.tagColors["a"]).toBe(0);
-			expect(
-				tab.containerEl.querySelectorAll(".tag-color-setting__chip")
-					.length,
-			).toBe(1);
-			expect(saveSettings).toHaveBeenCalled();
+			expect(visibleTags(tab)).toEqual(["a", "a/b"]);
+
+			input.value = "";
+			input.dispatchEvent(new Event("input"));
+
+			expect(visibleTags(tab)).toEqual(["a", "a/b", "c"]);
 		});
 
-		it("does not apply selection when no tag is entered", async () => {
-			const saveSettings = vi.fn(async () => {});
-			const { tab } = createTab({ saveSettings });
+		it("shows empty state when the vault has no tags", () => {
+			const app = new App();
+			app.metadataCache.getTags = () => ({});
+			const { tab } = createTab(
+				{ settings: { tagColors: undefined as any } },
+				app,
+			);
 			tab.showExperimental = true;
 			renderSettingsTab(tab);
 
-			const swatch = tab.containerEl.querySelector(
-				".tag-color-setting__swatch",
-			) as HTMLButtonElement;
-
-			// Force-enable and click without entering a tag
-			swatch.disabled = false;
-			swatch.dispatchEvent(new Event("click"));
-			await tick();
-
-			expect(saveSettings).not.toHaveBeenCalled();
+			expect(
+				tab.containerEl.querySelector(".tag-color-setting__empty"),
+			).toBeTruthy();
 		});
 
-		it("shows empty state when no tag assignments exist", () => {
+		it("lists tags without colors when tagColors is missing", () => {
 			const { tab } = createTab({
 				settings: { tagColors: undefined as any },
 			});
 			tab.showExperimental = true;
 			renderSettingsTab(tab);
 
-			const emptyState = tab.containerEl.querySelector(
-				".tag-color-setting__empty",
-			);
-
-			expect(emptyState).toBeTruthy();
+			expect(visibleTags(tab)).toEqual(["a", "a/b", "c"]);
 		});
 
-		it("removes tag color assignments via chip action", async () => {
+		it("resets a tag color from its row", async () => {
 			const saveSettings = vi.fn(async () => {});
 			const { tab, plugin } = createTab({
 				saveSettings,
@@ -471,121 +530,58 @@ describe("ColoredTagsPluginSettingTab", () => {
 			tab.showExperimental = true;
 			renderSettingsTab(tab);
 
-			const removeBtn = tab.containerEl.querySelector(
+			const removeBtn = rowFor(tab, "a").querySelector(
 				".tag-color-setting__chip-remove",
 			) as HTMLButtonElement;
 			removeBtn.dispatchEvent(new Event("click"));
 			await tick();
 
 			expect(plugin.settings.tagColors).toEqual({});
-			expect(
-				tab.containerEl.querySelectorAll(".tag-color-setting__chip")
-					.length,
-			).toBe(0);
 			expect(saveSettings).toHaveBeenCalled();
+			expect(
+				rowFor(tab, "a").querySelector(".tag-color-setting__chip-remove"),
+			).toBeNull();
+		});
+
+		it("does not navigate when a tag in the list is clicked", () => {
+			const { tab } = createTab();
+			tab.showExperimental = true;
+			renderSettingsTab(tab);
+
+			const event = new Event("click", { cancelable: true });
+			rowFor(tab, "a").querySelector("a.tag")!.dispatchEvent(event);
+
+			expect(event.defaultPrevented).toBe(true);
+		});
+
+		it("skips invalid tags and handles a missing metadata cache", () => {
+			const app = new App();
+			app.metadataCache.getTags = () => ({ "#keep": 1, "#/": 1 });
+			const { tab } = createTab({}, app);
+			tab.showExperimental = true;
+			renderSettingsTab(tab);
+
+			expect(visibleTags(tab)).toEqual(["keep"]);
+
+			(app as any).metadataCache = undefined;
+			expect((tab as any).collectTagsForAssignment()).toEqual([]);
 		});
 
 		it("refreshes tag color UI when palette changes", () => {
-			const { tab } = createTab();
+			const { tab, plugin } = createTab();
 			tab.showExperimental = true;
-			const renderPaletteSpy = vi.spyOn(
-				tab as any,
-				"renderPaletteSwatches",
-			);
-			const renderAssignmentsSpy = vi.spyOn(
-				tab as any,
-				"renderTagColorAssignments",
-			);
-
 			renderSettingsTab(tab);
-			renderPaletteSpy.mockClear();
-			renderAssignmentsSpy.mockClear();
 
+			plugin.palettes = {
+				light: ["#ff0000", "#00ff00", "#0000ff"],
+				dark: ["#000000", "#111111", "#222222"],
+			};
 			(tab as any).notifyPaletteChange();
 
-			expect(renderPaletteSpy).toHaveBeenCalledTimes(1);
-			expect(renderAssignmentsSpy).toHaveBeenCalledTimes(1);
-		});
-
-		it("fills tag input when chip is clicked", () => {
-			const { tab } = createTab({
-				settings: { tagColors: { sample: 0 } },
-			});
-			tab.showExperimental = true;
-			renderSettingsTab(tab);
-
-			const chip = tab.containerEl.querySelector(
-				".tag-color-setting__chip a.tag",
-			) as HTMLAnchorElement;
-			const input = tab.containerEl.querySelector(
-				".tag-color-setting__input input",
-			) as HTMLInputElement;
-			chip.dispatchEvent(
-				new Event("click", { bubbles: true, cancelable: true }),
-			);
-
-			expect(input.value).toBe("#sample");
-		});
-
-		it("filters out invalid tags when populating datalist", () => {
-			const app = new App();
-			app.metadataCache.getTags = () => ({
-				"#keep": 1,
-				"#skip/": 1,
-			});
-			const { tab } = createTab({}, app);
-			tab.showExperimental = true;
-			renderSettingsTab(tab);
-
-			const options = Array.from(
-				tab.containerEl.querySelectorAll("datalist option"),
-			).map((opt) => opt.getAttribute("value"));
-
-			expect(options).toContain("#keep");
-			expect(options).not.toContain("#skip/");
-		});
-
-		it("handles missing metadataCache when populating datalist", () => {
-			const app = new App();
-			(app as any).metadataCache = undefined;
-			const { tab } = createTab({}, app);
-			const datalist = document.createElement("datalist");
-
-			(tab as any).populateTagOptions(datalist);
-
-			expect(datalist.children.length).toBe(0);
-		});
-
-		it("handles missing getTags method when populating datalist", () => {
-			const app = new App();
-			(app.metadataCache as any).getTags = undefined;
-			const { tab } = createTab({}, app);
-			const datalist = document.createElement("datalist");
-
-			(tab as any).populateTagOptions(datalist);
-
-			expect(datalist.children.length).toBe(0);
-		});
-
-		it("handles missing knownTags config when populating datalist", () => {
-			const { tab } = createTab({
-				settings: { knownTags: undefined as any },
-			});
-			const datalist = document.createElement("datalist");
-
-			(tab as any).populateTagOptions(datalist);
-
-			expect(datalist.children.length).toBeGreaterThan(0);
-		});
-
-		it("calls onChange callback when tag assignments are empty", () => {
-			const { tab } = createTab({ settings: { tagColors: {} } });
-			const listEl = document.createElement("div");
-			const onChange = vi.fn();
-
-			(tab as any).renderTagColorAssignments(listEl, onChange);
-
-			expect(onChange).toHaveBeenCalled();
+			expect(
+				rowFor(tab, "a").querySelectorAll(".tag-color-setting__swatch")
+					.length,
+			).toBe(3);
 		});
 
 		it("resets config to defaults", async () => {

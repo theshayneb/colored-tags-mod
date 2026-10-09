@@ -46,10 +46,10 @@
 			},
 			"tagColors": {
 				"name": "Farbzuweisungen",
-				"description": "Wähle eine Farbe aus der aktuellen Palette. Beim Wechsel der Palette passt sich der Tag automatisch an.",
-				"placeholder": "Tag eingeben",
+				"description": "Wähle für jeden Tag in deinem Vault eine Farbe aus der aktuellen Palette. Wenn du die Palette änderst, erhält jeder Tag die nächstgelegene Farbe.",
+				"filterPlaceholder": "Tags filtern",
 				"clear": "Farbe zurücksetzen",
-				"empty": "Noch keine Farbzuweisungen",
+				"empty": "Noch keine Tags im Vault",
 				"applyHint": "Farbe anwenden"
 			},
 			"reset": {

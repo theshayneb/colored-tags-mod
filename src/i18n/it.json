@@ -46,10 +46,10 @@
 			},
 			"tagColors": {
 				"name": "Assegnazioni etichette",
-				"description": "Scegli un colore dalla tavolozza corrente. Se cambi la tavolozza, l'etichetta si adatta al colore più vicino.",
-				"placeholder": "Inizia a digitare un'etichetta",
+				"description": "Scegli un colore dalla palette attuale per qualsiasi etichetta del vault. Se cambi palette, ogni etichetta si adatta al colore più vicino.",
+				"filterPlaceholder": "Filtra etichette",
 				"clear": "Reimposta colore",
-				"empty": "Nessuna sovrascrittura etichetta ancora",
+				"empty": "Ancora nessuna etichetta nel vault",
 				"applyHint": "Applica colore"
 			},
 			"reset": {

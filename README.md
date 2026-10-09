@@ -30,7 +30,7 @@ The plugin interface is available in multiple languages:
 The plugin automatically detects language settings and displays the interface in your preferred language.
 
 ## Per-tag colors
-Use **Tag assignments** (in Experimental settings) to pick a color from the current palette for a tag. Custom colors are not supported. If you change palettes, the tag gets the nearest color from the new palette.
+Turn on **Experimental** in settings to see **Tag assignments**, which lists every tag in your vault with its own row of palette colors. Click a color to assign it, or ✕ to go back to the automatic color. Type in the box above the list to filter it. Custom colors are not supported. If you change palettes, the tag gets the nearest color from the new palette.
 
 ## Syncing across devices
 All settings (palette, per-tag colors, accessibility options and tag order) are stored in the plugin's `data.json`, so Obsidian Sync carries them between devices.

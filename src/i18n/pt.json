@@ -46,10 +46,10 @@
 			},
 			"tagColors": {
 				"name": "Atribuições de etiquetas",
-				"description": "Escolha uma cor da paleta atual. Se você mudar a paleta, a etiqueta se adapta à cor mais próxima.",
-				"placeholder": "Comece a digitar uma etiqueta",
+				"description": "Escolha uma cor da paleta atual para qualquer etiqueta do seu cofre. Se mudar a paleta, cada etiqueta adapta-se à cor mais próxima.",
+				"filterPlaceholder": "Filtrar etiquetas",
 				"clear": "Redefinir cor",
-				"empty": "Nenhuma substituição de etiqueta ainda",
+				"empty": "Ainda não há etiquetas no seu cofre",
 				"applyHint": "Aplicar cor"
 			},
 			"reset": {
